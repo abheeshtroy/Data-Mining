@@ -1,0 +1,19 @@
+# OS/editor cruft
+.DS_Store
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+# Python envs
+.venv/
+.env
+*/.venv/
+*/.env/
+
+# Data & results (keep placeholders)
+**/data/*
+!**/data/.gitkeep
+**/results/*
+!**/results/.gitkeep
+
+# Jupyter kernelspecs (optional)
+*.nbconvert.ipynb
