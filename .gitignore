@@ -1,19 +1,22 @@
-# OS/editor cruft
-.DS_Store
-.ipynb_checkpoints/
+# --- Python and Jupyter ---
 __pycache__/
+.ipynb_checkpoints/
 *.pyc
-# Python envs
+*.pyo
+*.pyd
+
+# --- macOS system files ---
+.DS_Store
+
+# --- Virtual environments ---
 .venv/
-.env
-*/.venv/
-*/.env/
+env/
+venv/
 
-# Data & results (keep placeholders)
-**/data/*
-!**/data/.gitkeep
-**/results/*
-!**/results/.gitkeep
+# --- Jupyter temporary files ---
+.virtual_documents/
 
-# Jupyter kernelspecs (optional)
-*.nbconvert.ipynb
+# --- Local data and results (large or generated files) ---
+data/
+results/
+
