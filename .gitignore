@@ -20,3 +20,17 @@ venv/
 data/
 results/
 
+# --- Allow tracking of homework_2 ---
+!Homeworks/homework_2/
+!Homeworks/homework_2/**
+
+# Ignore data files for Homework 3
+Homeworks/homework_3/data/*
+*.csv
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/

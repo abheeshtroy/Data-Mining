@@ -59,11 +59,13 @@ def generalized_jaccard_distance(x: np.ndarray, c: np.ndarray) -> float:
 # -----------------------------------------------------------
 
 class KMeansScratch:
-    def __init__(self, K, distance_function, max_iter=500, stop_rule="classic"):
+    def __init__(self, K, distance_function, max_iter=500,
+                 stop_rule="classic", stop_condition=None):
         self.K = K
         self.distance_function = distance_function
         self.max_iter = max_iter
-        self.stop_rule = stop_rule
+        self.stop_rule = stop_rule          # Q1 + Q2 -> classic, Q3 -> q3
+        self.stop_condition = stop_condition # Q4 options
 
         self.centroids_ = None
         self.labels_ = None
@@ -122,29 +124,51 @@ class KMeansScratch:
             labels = self.assign_clusters(X, centroids)
             new_centroids = self.update_centroids(X, labels)
 
-            # Compute SSE for stop_rule="q3"
             current_sse = self.compute_sse(X, labels, new_centroids)
 
             # -------------------------------------------------
-            # CLASSIC STOP RULE (used for Q1 + Q2)
+            # Q1 & Q2 stopping rule (classic)
             # -------------------------------------------------
-            if self.stop_rule == "classic":
+            if self.stop_rule == "classic" and self.stop_condition is None:
                 if np.allclose(centroids, new_centroids):
                     centroids = new_centroids
                     break
 
             # -------------------------------------------------
-            # Q3 STOP RULE
+            # Q3 unified stopping rule
             # -------------------------------------------------
-            elif self.stop_rule == "q3":
+            elif self.stop_rule == "q3" and self.stop_condition is None:
                 stop_centroid_same = np.allclose(centroids, new_centroids)
-                stop_sse_increase = (prev_sse is not None and current_sse > prev_sse)
-
+                stop_sse_increase = (
+                    prev_sse is not None and current_sse > prev_sse
+                )
                 if stop_centroid_same or stop_sse_increase:
                     centroids = new_centroids
                     break
-
                 prev_sse = current_sse
+
+            # -------------------------------------------------
+            # Q4: stop when centroids don't change
+            # -------------------------------------------------
+            elif self.stop_condition == "centroid":
+                if np.allclose(centroids, new_centroids):
+                    centroids = new_centroids
+                    break
+
+            # -------------------------------------------------
+            # Q4: stop when SSE increases
+            # -------------------------------------------------
+            elif self.stop_condition == "sse_increase":
+                if prev_sse is not None and current_sse > prev_sse:
+                    centroids = new_centroids
+                    break
+                prev_sse = current_sse
+
+            # -------------------------------------------------
+            # Q4: stop when max_iter reached (do nothing)
+            # -------------------------------------------------
+            elif self.stop_condition == "max_iter":
+                pass
 
             centroids = new_centroids
 
@@ -187,7 +211,7 @@ def compute_accuracy(true_labels, cluster_assignments, mapping):
 
 
 # -----------------------------------------------------------
-# MAIN (Q1 + Q2 + Q3)
+# MAIN (Q1 + Q2 + Q3 + Q4)
 # -----------------------------------------------------------
 
 if __name__ == "__main__":
@@ -251,3 +275,27 @@ if __name__ == "__main__":
     model_jac_q3 = KMeansScratch(K, generalized_jaccard_distance, max_iter=500, stop_rule="q3")
     model_jac_q3.fit(X)
     print(f"Jaccard:   iterations={model_jac_q3.n_iter_}, time={model_jac_q3.fit_time_:.4f}s")
+
+    # -------------------------------------------------------
+    # Q4 — SSE under 3 Stopping Conditions
+    # -------------------------------------------------------
+    print("\n======================")
+    print("Q4: SSE UNDER 3 STOPPING CONDITIONS")
+    print("======================")
+
+    stop_conditions = ["centroid", "sse_increase", "max_iter"]
+
+    for cond in stop_conditions:
+        print(f"\n--- Stop Condition: {cond} ---")
+
+        model_euc_q4 = KMeansScratch(K, euclidean_distance, max_iter=100, stop_condition=cond)
+        model_euc_q4.fit(X)
+        print(f"Euclidean SSE ({cond}): {model_euc_q4.sse_}")
+
+        model_cos_q4 = KMeansScratch(K, cosine_distance, max_iter=100, stop_condition=cond)
+        model_cos_q4.fit(X)
+        print(f"Cosine SSE ({cond}):    {model_cos_q4.sse_}")
+
+        model_jac_q4 = KMeansScratch(K, generalized_jaccard_distance, max_iter=100, stop_condition=cond)
+        model_jac_q4.fit(X)
+        print(f"Jaccard SSE ({cond}):   {model_jac_q4.sse_}")
